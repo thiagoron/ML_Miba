@@ -49,6 +49,7 @@ def matplotlib_imshow(img, one_channel=False):
     if one_channel:
         plt.imshow(npimg, cmap="Greys")
     else:
+        print(classes)
         plt.imshow(np.transpose(npimg, (1, 2, 0)))
     plt.show() 
 
@@ -97,13 +98,10 @@ if __name__ == '__main__':
 
     # Load your trained model here
     # Replace YourModelClass with the actual class name of your model
-    model = YourModelClass()
-    model.load_state_dict(torch.load(r'C:\Users\RONZELLADOTH\OneDrive - Miba AG\Área de Trabalho\ML_MIBA\ML_Miba\model.pth'))  # Load the trained model weights
-    model.eval()
+    #model = YourModelClass()
+    #model.load_state_dict(torch.load(r'C:\Users\RONZELLADOTH\OneDrive - Miba AG\Área de Trabalho\ML_MIBA\ML_Miba\model.pth'))  # Load the trained model weights
+    #model.eval()
     
     # Start webcam inference
-    webcam_inference(model, classes, transform)
-    webcam_inference(model, classes, transform)
-
-
-
+    #webcam_inference(model, classes, transform)
+    #webcam_inference(model, classes, transform)
