@@ -1,99 +1,28 @@
-#import section
-import speech_recognition as sr
-from gtts import gTTS
-import os
-from datetime import datetime
-import playsound
-import pyjokes
-import wikipedia
-import pyaudio
-import webbrowser
-from pygame import mixer
+import pythorch_test as pt 
+import torchvision
 
+train_loader = pt.train_loader
+classes = pt.classes
 
-#get mic audio
-def get_audio():
-    r = sr.Recognizer()
-    with sr.Microphone() as source:
-        r.pause_threshold = 1
-        # wait for a second to let the recognizer adjust the
-        # energy threshold based on the surrounding noise level
-        r.adjust_for_ambient_noise(source, duration=1)
-        audio = r.listen(source)
-        said = ""
-        try:
-            said = r.recognize_google(audio)
-            print(said)
-        except sr.UnknownValueError:
-            speak("Sorry, I did not get that.")
-        except sr.RequestError:
-            speak("Sorry, the service is not available")
-    return said.lower()
+def matplotlib_imshow(img, one_channel=False):
+    if one_channel:
+        img = img.mean(dim=0)
+    img = img / 2 + 0.5     # unnormalize
+    npimg = img.numpy()
+    if one_channel:
+        plt.imshow(npimg, cmap="Greys")
+    else:
+        plt.imshow(np.transpose(npimg, (1, 2, 0)))
+    
 
-#speak converted audio to text
-def speak(text):
-    tts = gTTS(text=text, lang='en')
-    filename = "voice.mp3"
-    try:
-        os.remove(filename)
-    except OSError:
-        pass
-    tts.save(filename)
-    playsound.playsound(filename)
+if __name__ == "__main__":
+    
+    pass
 
-#function to respond to commands
-def respond(text):
-    print("Text from get audio " + text)
-    if 'youtube' in text:
-        speak("What do you want to search for?")
-        keyword = get_audio()
-        if keyword!= '':
-            url = f"https://www.youtube.com/results?search_query={keyword}"
-            webbrowser.get().open(url)
-            speak(f"Here is what I have found for {keyword} on youtube")
-    elif 'search' in text:
-        speak("What do you want to search for?")
-        query = get_audio()
-        if query !='':
-            result = wikipedia.summary(query, sentences=3)
-            speak("According to wikipedia")
-            print(result)
-            speak(result)
-    elif 'joke' in text:
-        speak(pyjokes.get_joke())
-    elif 'empty recycle bin' in text:
-        winshell.recycle_bin().empty(confirm=False, show_progress=False, sound=True)
-        speak("Recycle bin emptied")
-    elif 'what time' in text:
-        strTime = datetime.today().strftime("%H:%M %p")
-        print(strTime)
-        speak(strTime)
-    elif 'play music' in text or 'play song' in text:
-        speak("Now playing...")
-        music_dir = "C:\\Users\\UserName\\Downloads\\Music\\" #add your music directory here..
-        songs = os.listdir(music_dir)
-        #counter = 0
-        print(songs)
-        playmusic(music_dir + "\\" + songs[0])
-    elif 'stop music' in text:
-        speak("Stopping playback.")
-        stopmusic()
-    elif 'exit' in text:
-        speak("Goodbye, till next time")
-        exit()
-#play music
-def playmusic(song):
-    mixer.init()
-    mixer.music.load(song)
-    mixer.music.play()
-#stop music
-def stopmusic():
-    mixer.music.stop()
+dataiter = iter(train_loader)
+images, labels = next(dataiter)
 
-#let's try it
-#text = get_audio()
-#speak(text)
-while True:
-    print("I am listening...")
-    text = get_audio()
-    respond(text)
+# Create a grid from the images and show them
+img_grid = torchvision.utils.make_grid(images)
+matplotlib_imshow(img_grid, one_channel=True)
+print('  '.join(classes[labels[j].item()] for j in range(4)))
