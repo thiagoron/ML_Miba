@@ -38,7 +38,7 @@ def treinamento_ML():
     print('Training set has {} instances'.format(len(train_set)))
     print('Validation set has {} instances'.format(len(validation_set)))
 
-    return train_loader, classes, transform
+    return train_loader, classes, transform, 
 
 # Helper function for inline image display
 def matplotlib_imshow(img, one_channel=False):
@@ -97,11 +97,12 @@ if __name__ == '__main__':
 
     # Load your trained model here
     # Replace YourModelClass with the actual class name of your model
-    model = treinamento_ML()
-    model.load_state_dict(torch.load('Validacao_treinamento.pth'))
+    model = YourModelClass()
+    model.load_state_dict(torch.load(r'C:\Users\RONZELLADOTH\OneDrive - Miba AG\Área de Trabalho\ML_MIBA\ML_Miba\model.pth'))  # Load the trained model weights
     model.eval()
-
+    
     # Start webcam inference
+    webcam_inference(model, classes, transform)
     webcam_inference(model, classes, transform)
 
 
