@@ -1,11 +1,11 @@
-#Dedicated to run the ML
+# Dedicated to run the ML
 import torch
 import matplotlib.pyplot as plt
 import numpy as np
-import cv2
 import torchvision
 import torchvision.transforms as transforms
 import Training_ML
+from Training_ML import YourModelClass
 
 # Helper function for inline image display
 def matplotlib_imshow(img, one_channel=False):
@@ -16,41 +16,30 @@ def matplotlib_imshow(img, one_channel=False):
     if one_channel:
         plt.imshow(npimg, cmap="Greys")
     else:
-        print(classes)
         plt.imshow(np.transpose(npimg, (1, 2, 0)))
     plt.show() 
 
-def webcam_inference(model, classes, transform):
-    cap = cv2.VideoCapture(0)
-    if not cap.isOpened():
-        print("Error: Could not open webcam.")
-        return
+# Função para executar o modelo de ML
+def executa_ml(tensor_image):
+    # Redimensione a imagem para 28x28 pixels
+    transform = transforms.Compose([
+transforms.Resize((28, 28)),
+        transforms.Normalize((0.5,), (0.5,))
+    ])
+    tensor_image = transform(tensor_image)
 
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
+    # Carregue o modelo treinado
+    model = YourModelClass()
+    model.load_state_dict(torch.load(r'modelo.pt'))  # Load the trained model weights
+    model.eval()
 
-        # Preprocess the frame
-        img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        img = cv2.resize(img, (32, 32))  # Resize to match the input size of your model
-        img = transform(img).unsqueeze(0)  # Apply transformations and add batch dimension
+    # Execute o modelo na imagem tensorizada
+    with torch.no_grad():
+        outputs = model(tensor_image.unsqueeze(0))  # Adicione uma dimensão para o batch
 
-        # Perform inference
-        with torch.no_grad():
-            outputs = model(img)
-            _, predicted = torch.max(outputs, 1)
-            label = classes[predicted.item()]
-
-        # Display the result
-        cv2.putText(frame, label, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        cv2.imshow('Webcam', frame)
-
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-    cap.release()
-    cv2.destroyAllWindows()
+    # Processar os resultados (ajuste conforme necessário)
+    _, predicted = torch.max(outputs, 1)
+    return predicted.item()
 
 if __name__ == '__main__':
     train_loader, classes, transform = Training_ML.treinamento_ML()
@@ -64,11 +53,11 @@ if __name__ == '__main__':
     print('  '.join(classes[labels[j].item()] for j in range(4)))
 
     # Load your trained model here
-    # Replace YourModelClass with the actual class name of your model
-    #model = YourModelClass()
-    #model.load_state_dict(torch.load(r'C:\Users\RONZELLADOTH\OneDrive - Miba AG\Área de Trabalho\ML_MIBA\ML_Miba\model.pth'))  # Load the trained model weights
-    #model.eval()
-    
-    # Start webcam inference
-    #webcam_inference(model, classes, transform)
-    #webcam_inference(model, classes, transform)
+    model = YourModelClass()
+    model.load_state_dict(torch.load(r'modelo.pt'))  # Load the trained model weights
+    model.eval()
+    print(model)
+    outputs = model(images)
+    print(outputs)
+
+
