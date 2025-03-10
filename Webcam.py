@@ -23,9 +23,9 @@ def inicia_webcam():
             break
 
         # Converta a imagem para um tensor e redimensione para 28x28 pixels
-        pil_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BAYER_BG2GRAY))
+        pil_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
         transform = transforms.Compose([
-            transforms.Resize((28, 28)),
+            transforms.Resize((100, 100)),
             transforms.ToTensor(),
             transforms.Normalize((0.5,), (0.5,))
         ])

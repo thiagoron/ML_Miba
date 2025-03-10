@@ -21,16 +21,18 @@ def matplotlib_imshow(img, one_channel=False):
 
 # Função para executar o modelo de ML
 def executa_ml(tensor_image):
-    # Redimensione a imagem para 28x28 pixels
+    # Redimensione a imagem para 100x100 pixels e converta para escala de cinza
     transform = transforms.Compose([
-transforms.Resize((28, 28)),
+        transforms.Grayscale(num_output_channels=1),
+        transforms.Resize((100, 100)),
+        transforms.ToTensor(),
         transforms.Normalize((0.5,), (0.5,))
     ])
     tensor_image = transform(tensor_image)
 
     # Carregue o modelo treinado
     model = YourModelClass()
-    model.load_state_dict(torch.load(r'modelo.pt'))  # Load the trained model weights
+    model.load_state_dict(torch.load(r'model.pt'))  # Load the trained model weights
     model.eval()
 
     # Execute o modelo na imagem tensorizada
@@ -54,7 +56,7 @@ if __name__ == '__main__':
 
     # Load your trained model here
     model = YourModelClass()
-    model.load_state_dict(torch.load(r'modelo.pt'))  # Load the trained model weights
+    model.load_state_dict(torch.load(r'model.pt'))  # Load the trained model weights
     model.eval()
     print(model)
     outputs = model(images)
