@@ -35,7 +35,6 @@ class YourModelClass(nn.Module):
         return x
 
 model = YourModelClass().to(device)
-print(model)
 
 def calculate_output_size(input_size, kernel_size, stride, padding):
     return (input_size - kernel_size + 2 * padding) // stride + 1
@@ -48,8 +47,8 @@ def treinamento_ML():
          transforms.Normalize((0.5,), (0.5,))])
     
     # Define the path to your training and validation data
-    train_data_path = r'C:\Users\RONZELLADOTH\OneDrive - Miba AG\Área de Trabalho\ML_MIBA\ML_Miba\Imagens_para_treino'
-    validation_data_path = r'C:\Users\RONZELLADOTH\OneDrive - Miba AG\Área de Trabalho\ML_MIBA\ML_Miba\Validacao_treinamento'
+    train_data_path = r'Imagens_para_treino'
+    validation_data_path = r'Validacao_treinamento'
 
     # Create datasets using ImageFolder
     train_set = ImageFolder(root=train_data_path, transform=transform)
@@ -61,11 +60,11 @@ def treinamento_ML():
 
     # Class labels
     classes = train_set.classes
-    print('Classes:', classes)
+    #print('Classes:', classes)
 
     # Report split size
-    print('Training set has {} instances'.format(len(train_set)))
-    print('Validation set has {} instances'.format(len(validation_set)))
+    #print('Training set has {} instances'.format(len(train_set)))
+    #print('Validation set has {} instances'.format(len(validation_set)))
 
     # Define the model
     model = YourModelClass().to(device)
@@ -106,5 +105,5 @@ def treinamento_ML():
      #   print(f'Validation Accuracy: {accuracy:.2f}%, Avg loss: {test_loss/len(validation_loader):.4f}')
 
     # Save the model
-    torch.save(model.state_dict(), r'C:\Users\RONZELLADOTH\OneDrive - Miba AG\Área de Trabalho\ML_MIBA\ML_Miba\model.pt')
+    torch.save(model.state_dict(), r'model.pt')
     return train_loader, classes, transform

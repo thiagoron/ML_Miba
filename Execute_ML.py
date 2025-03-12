@@ -21,7 +21,7 @@ def matplotlib_imshow(img, one_channel=False):
     plt.show() 
 
 # Função para executar o modelo de ML
-def executa_ml(image_input):
+def executa_ml(image_input, classes):
     # Verifique se a entrada é um caminho de imagem ou um tensor
     if isinstance(image_input, str):
         # Carregar a imagem usando PIL
@@ -56,7 +56,12 @@ def executa_ml(image_input):
 
     # Processar os resultados (ajuste conforme necessário)
     _, predicted = torch.max(outputs, 1)
-    return predicted.item()
+    
+    # Check if the predicted index is within the range of the classes list
+    if predicted.item() < len(classes):
+        return classes[predicted.item()]
+    else:
+        return "None"
 
 if __name__ == '__main__':
     train_loader, classes, transform = Training_ML.treinamento_ML()
