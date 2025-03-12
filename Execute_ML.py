@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torchvision
 import torchvision.transforms as transforms
+from PIL import Image  # Import PIL Image
 import Training_ML
 from Training_ML import YourModelClass
 
@@ -20,7 +21,17 @@ def matplotlib_imshow(img, one_channel=False):
     plt.show() 
 
 # Função para executar o modelo de ML
-def executa_ml(tensor_image):
+def executa_ml(image_input):
+    # Verifique se a entrada é um caminho de imagem ou um tensor
+    if isinstance(image_input, str):
+        # Carregar a imagem usando PIL
+        image = Image.open(image_input).convert('RGB')
+    elif isinstance(image_input, torch.Tensor):
+        # Se a entrada já for um tensor, use-a diretamente
+        image = image_input
+    else:
+        raise ValueError("Input should be a file path or a tensor")
+
     # Redimensione a imagem para 100x100 pixels e converta para escala de cinza
     transform = transforms.Compose([
         transforms.Grayscale(num_output_channels=1),
@@ -28,7 +39,11 @@ def executa_ml(tensor_image):
         transforms.ToTensor(),
         transforms.Normalize((0.5,), (0.5,))
     ])
-    tensor_image = transform(tensor_image)
+    
+    if isinstance(image, Image.Image):
+        tensor_image = transform(image)
+    else:
+        tensor_image = image
 
     # Carregue o modelo treinado
     model = YourModelClass()

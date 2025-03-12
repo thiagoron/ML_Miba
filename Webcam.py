@@ -22,7 +22,7 @@ def inicia_webcam():
             print("Erro: Não foi possível ler o frame.")
             break
 
-        # Converta a imagem para um tensor e redimensione para 28x28 pixels
+        # Converta a imagem para um tensor e redimensione para 100x100 pixels
         pil_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
         transform = transforms.Compose([
             transforms.Resize((100, 100)),
@@ -38,7 +38,7 @@ def inicia_webcam():
         cv2.putText(frame, f"Predicted: {predicted_label}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
         # Use matplotlib to display the image
-        plt.imshow(cv2.cvtColor(frame, cv2.COLOR_BAYER_BG2GRAY))
+        plt.imshow(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
         plt.title('Imagem Capturada')
         plt.show(block=False)
         plt.pause(0.001)
