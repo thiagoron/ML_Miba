@@ -1,12 +1,11 @@
 import cv2
 import torchvision.transforms as transforms
-import matplotlib.pyplot as plt
 from PIL import Image
 import Execute_ML
 import Training_ML  # Import the Training_ML module to get the classes list
 import time
 
-def inicia_webcam():
+def inicia_webcam(classes):
     # Inicialize a webcam
     cap = cv2.VideoCapture(1)
 
@@ -17,12 +16,10 @@ def inicia_webcam():
     # Ative o autofoco
     cap.set(cv2.CAP_PROP_AUTOFOCUS, 1)  # 1 para ativar, 0 para desativar
 
-    # Get the classes list from the training module
-    _, classes, _ = Training_ML.treinamento_ML()
+    previous_label = None  # Initialize the previous label
 
     while True:
         ret, frame = cap.read()
-        predicted_label = None
         
         if not ret:
             print("Erro: Não foi possível ler o frame.")
@@ -38,24 +35,32 @@ def inicia_webcam():
         tensor_image = transform(pil_image)
 
         # Passe a imagem completa para o modelo de ML
-        predicted_label = Execute_ML.executa_ml(tensor_image,classes)  # Pass the classes list
-        print(predicted_label)  # Print the predicted class name
+        predicted_label = Execute_ML.executa_ml(tensor_image, classes)  # Pass the classes list
         
+        # Print the predicted class name only if it changes
+        if predicted_label != previous_label:
+            print(predicted_label)
+            previous_label = predicted_label
 
         # Desenhe as caixas delimitadoras e exiba os resultados
-        #cv2.putText(frame, f"Predicted: {predicted_label}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        cv2.putText(frame, f"Predicted: {predicted_label}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
         # Use OpenCV to display the image
         cv2.imshow('Imagem Capturada', frame)
+
+        # Add a delay (e.g., 0.1 seconds)
         time.sleep(0.1)
 
         # Saia do loop quando a tecla 'q' for pressionada
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
-        
+
     # Libere a captura e feche as janelas
     cap.release()
     cv2.destroyAllWindows()
 
-# Chame a função para iniciar a webcam
-inicia_webcam()
+if __name__ == '__main__':
+    # Get the classes list from the training module
+    _, classes, _ = Training_ML.treinamento_ML()
+    # Chame a função para iniciar a webcam
+    inicia_webcam(classes)

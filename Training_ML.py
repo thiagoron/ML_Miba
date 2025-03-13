@@ -60,11 +60,11 @@ def treinamento_ML():
 
     # Class labels
     classes = train_set.classes
-    #print('Classes:', classes)
+    print('Classes:', classes)
 
     # Report split size
-    #print('Training set has {} instances'.format(len(train_set)))
-    #print('Validation set has {} instances'.format(len(validation_set)))
+    print('Training set has {} instances'.format(len(train_set)))
+    print('Validation set has {} instances'.format(len(validation_set)))
 
     # Define the model
     model = YourModelClass().to(device)
@@ -74,35 +74,35 @@ def treinamento_ML():
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
     # Training loop
-    #num_epochs = 10
-    #for epoch in range(num_epochs):
-    #    model.train()
-    #    running_loss = 0.0
-    #    for inputs, labels in train_loader:
-    #        inputs, labels = inputs.to(device), labels.to(device)
-    #        optimizer.zero_grad()
-    #        outputs = model(inputs)
-    #        loss = criterion(outputs, labels)
-    #        loss.backward()
-    #        optimizer.step()
-    #        running_loss += loss.item()
-    #    
-    #    print(f'Epoch {epoch+1}/{num_epochs}, Loss: {running_loss/len(train_loader)}')
-    #
-    #    # Validation loop
-     #   model.eval()
-     #   test_loss, correct = 0, 0
-     #   with torch.no_grad():
-     #       for inputs, labels in validation_loader:
-     #           inputs, labels = inputs.to(device), labels.to(device)
-     #           outputs = model(inputs)
-     #           loss = criterion(outputs, labels)
-     #           test_loss += loss.item()
-     #           _, predicted = torch.max(outputs, 1)
-     #           correct += (predicted == labels).sum().item()
-     #   
-     #   accuracy = 100 * correct / len(validation_loader.dataset)
-     #   print(f'Validation Accuracy: {accuracy:.2f}%, Avg loss: {test_loss/len(validation_loader):.4f}')
+    num_epochs = 10
+    for epoch in range(num_epochs):
+        model.train()
+        running_loss = 0.0
+        for inputs, labels in train_loader:
+            inputs, labels = inputs.to(device), labels.to(device)
+            optimizer.zero_grad()
+            outputs = model(inputs)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
+            running_loss += loss.item()
+        
+        print(f'Epoch {epoch+1}/{num_epochs}, Loss: {running_loss/len(train_loader)}')
+    
+        # Validation loop
+        model.eval()
+        test_loss, correct = 0, 0
+        with torch.no_grad():
+            for inputs, labels in validation_loader:
+                inputs, labels = inputs.to(device), labels.to(device)
+                outputs = model(inputs)
+                loss = criterion(outputs, labels)
+                test_loss += loss.item()
+                _, predicted = torch.max(outputs, 1)
+                correct += (predicted == labels).sum().item()
+        
+        accuracy = 100 * correct / len(validation_loader.dataset)
+        print(f'Validation Accuracy: {accuracy:.2f}%, Avg loss: {test_loss/len(validation_loader):.4f}')
 
     # Save the model
     torch.save(model.state_dict(), r'model.pt')
