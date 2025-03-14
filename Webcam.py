@@ -4,6 +4,7 @@ from PIL import Image
 import Execute_ML
 import Training_ML  # Import the Training_ML module to get the classes list
 import time
+import matplotlib.pyplot as plt
 
 def update_focus(val):
     global cap

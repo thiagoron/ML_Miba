@@ -88,6 +88,5 @@ if __name__ == '__main__':
     pred = predictions[0]
     pred_boxes = pred["boxes"].long()
     outputimage = torchvision.utils.draw_bounding_boxes(images, pred_boxes, width=2)
-    matplotlib_imshow(outputimage)
 
 
