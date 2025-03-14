@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torchvision
 import torchvision.transforms as transforms
+from torchvision.ops.boxes import masks_to_boxes 
 from PIL import Image  # Import PIL Image
 import Training_ML
 from Training_ML import YourModelClass
@@ -73,6 +74,7 @@ if __name__ == '__main__':
     img_grid = torchvision.utils.make_grid(images)
     matplotlib_imshow(img_grid, one_channel=True)
     print('  '.join(classes[labels[j].item()] for j in range(4)))
+    boxes = masks_to_boxes(images)
 
     # Load your trained model here
     model = YourModelClass()
@@ -81,5 +83,11 @@ if __name__ == '__main__':
     print(model)
     outputs = model(images)
     print(outputs)
+    predictions = [{"boxes": boxes, "labels": outputs
+                    } for boxes, outputs in zip(boxes, outputs)]
+    pred = predictions[0]
+    pred_boxes = pred["boxes"].long()
+    outputimage = torchvision.utils.draw_bounding_boxes(images, pred_boxes, width=2)
+    matplotlib_imshow(outputimage)
 
 

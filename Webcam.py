@@ -5,7 +5,12 @@ import Execute_ML
 import Training_ML  # Import the Training_ML module to get the classes list
 import time
 
+def update_focus(val):
+    global cap
+    cap.set(cv2.CAP_PROP_FOCUS, val)
+
 def inicia_webcam(classes):
+    global cap
     # Inicialize a webcam
     cap = cv2.VideoCapture(1)
 
@@ -14,7 +19,13 @@ def inicia_webcam(classes):
         exit()
 
     # Ative o autofoco
-    cap.set(cv2.CAP_PROP_AUTOFOCUS, 1)  # 1 para ativar, 0 para desativar
+    cap.set(cv2.CAP_PROP_AUTOFOCUS, 0)  # 1 para ativar, 0 para desativar
+
+    # Create a window
+    cv2.namedWindow('Imagem Capturada')
+
+    # Create a trackbar for focus distance
+    cv2.createTrackbar('Focus', 'Imagem Capturada', 0, 100, update_focus)
 
     previous_label = None  # Initialize the previous label
 
@@ -41,6 +52,7 @@ def inicia_webcam(classes):
         if predicted_label != previous_label:
             print(predicted_label)
             previous_label = predicted_label
+            
 
         # Desenhe as caixas delimitadoras e exiba os resultados
         cv2.putText(frame, f"Predicted: {predicted_label}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
