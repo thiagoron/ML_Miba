@@ -30,6 +30,9 @@ def inicia_webcam(classes):
 
     previous_label = None  # Initialize the previous label
 
+    # Define the region of interest (ROI) coordinates
+    roi_x, roi_y, roi_w, roi_h = 100, 100, 200, 200  # Adjust these values as needed
+
     while True:
         ret, frame = cap.read()
         
@@ -37,8 +40,14 @@ def inicia_webcam(classes):
             print("Erro: Não foi possível ler o frame.")
             break
 
+        # Draw the ROI rectangle on the frame
+        cv2.rectangle(frame, (roi_x, roi_y), (roi_x + roi_w, roi_y + roi_h), (255, 0, 0), 2)
+
+        # Crop the ROI from the frame
+        roi = frame[roi_y:roi_y + roi_h, roi_x:roi_x + roi_w]
+
         # Converta a imagem para um tensor e redimensione para 100x100 pixels
-        pil_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
+        pil_image = Image.fromarray(cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY))
         transform = transforms.Compose([
             transforms.Resize((100, 100)),
             transforms.ToTensor(),
@@ -53,7 +62,6 @@ def inicia_webcam(classes):
         if predicted_label != previous_label:
             print(predicted_label)
             previous_label = predicted_label
-            
 
         # Desenhe as caixas delimitadoras e exiba os resultados
         cv2.putText(frame, f"Predicted: {predicted_label}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)

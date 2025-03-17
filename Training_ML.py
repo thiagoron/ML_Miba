@@ -42,13 +42,13 @@ def calculate_output_size(input_size, kernel_size, stride, padding):
 def treinamento_ML():
     transform = transforms.Compose(
         [transforms.Grayscale(num_output_channels=1),  # Convert images to grayscale
-         transforms.Resize((100, 100)),  # Resize to 100x100 pixels
+         transforms.Resize((100, 100)),  # Resize to 300x300 pixels
          transforms.ToTensor(),
          transforms.Normalize((0.5,), (0.5,))])
     
     # Define the path to your training and validation data
-    train_data_path = r'Imagens_para_treino'
-    validation_data_path = r'Validacao_treinamento'
+    train_data_path = r'C:\Users\RONZELLADOTH\OneDrive - Miba AG\Área de Trabalho\ML_MIBA\ML_Miba\Imagens_para_treino'
+    validation_data_path = r'C:\Users\RONZELLADOTH\OneDrive - Miba AG\Área de Trabalho\ML_MIBA\ML_Miba\Validacao_treinamento'
 
     # Create datasets using ImageFolder
     train_set = ImageFolder(root=train_data_path, transform=transform)
@@ -106,6 +106,25 @@ def treinamento_ML():
         accuracy = 100 * correct / len(validation_loader.dataset)
         print(f'Validation Accuracy: {accuracy:.2f}%, Avg loss: {test_loss/len(validation_loader):.4f}')
         print("Training completed.")
+
+        # Save some sample images and their masks
+        sample_images, sample_labels = next(iter(validation_loader))
+        sample_images, sample_labels = sample_images.to(device), sample_labels.to(device)
+        sample_outputs = model(sample_images)
+        _, sample_predictions = torch.max(sample_outputs, 1)
+
+        fig, axes = plt.subplots(2, 4, figsize=(12, 6))
+        for i, ax in enumerate(axes.flatten()):
+            if i >= len(sample_images):
+                break
+            image = sample_images[i].cpu().numpy().transpose((1, 2, 0)).squeeze()
+            label = classes[sample_labels[i]]
+            prediction = classes[sample_predictions[i]]
+            ax.imshow(image, cmap='gray')
+            ax.set_title(f"Label: {label}\nPrediction: {prediction}")
+            ax.axis('off')
+        plt.tight_layout()
+        plt.show()
 
     # Save the model
     torch.save(model.state_dict(), r'model.pt')
