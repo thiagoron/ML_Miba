@@ -31,7 +31,7 @@ def inicia_webcam(classes):
     previous_label = None  # Initialize the previous label
 
     # Define the region of interest (ROI) coordinates
-    roi_x, roi_y, roi_w, roi_h = 100, 100, 200, 200  # Adjust these values as needed
+    roi_x, roi_y, roi_w, roi_h = 200, 200, 300, 300  # Adjust these values as needed
 
     while True:
         ret, frame = cap.read()

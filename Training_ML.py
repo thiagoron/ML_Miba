@@ -6,6 +6,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torchvision
 import torchvision.transforms as transforms
+import cv2
+from PIL import Image
 
 # Pytorch tensorboard support
 from datetime import datetime
@@ -39,13 +41,82 @@ model = YourModelClass().to(device)
 def calculate_output_size(input_size, kernel_size, stride, padding):
     return (input_size - kernel_size + 2 * padding) // stride + 1
 
+def capture_image_from_webcam():
+    cap = cv2.VideoCapture(1)
+    if not cap.isOpened():
+        print("Erro: Não foi possível abrir a webcam.")
+        return None
+
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            print("Erro: Não foi possível ler o frame.")
+            break
+
+        cv2.imshow('Press "s" to save the image', frame)
+
+        if cv2.waitKey(1) & 0xFF == ord('s'):
+            cv2.imwrite('captured_image.png', frame)
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
+    return 'captured_image.png'
+
+def segment_image(image_path):
+    image = cv2.imread(image_path)
+    mask = np.zeros(image.shape[:2], dtype=np.uint8)
+    points = []
+
+    def draw_polygon(event, x, y, flags, param):
+        if event == cv2.EVENT_LBUTTONDOWN:
+            points.append((x, y))
+        elif event == cv2.EVENT_RBUTTONDOWN:
+            if len(points) > 1:
+                cv2.fillPoly(mask, [np.array(points)], 255)
+                points.clear()
+
+    cv2.namedWindow('Segment Image')
+    cv2.setMouseCallback('Segment Image', draw_polygon)
+
+    while True:
+        display_image = cv2.addWeighted(image, 0.7, cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR), 0.3, 0)
+        for point in points:
+            cv2.circle(display_image, point, 3, (0, 255, 0), -1)
+        if len(points) > 1:
+            cv2.polylines(display_image, [np.array(points)], isClosed=False, color=(0, 255, 0), thickness=2)
+        cv2.imshow('Segment Image', display_image)
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    cv2.imwrite('segmented_mask.png', mask)
+    cv2.destroyAllWindows()
+    return 'segmented_mask.png'
+
 def treinamento_ML():
+    # Capture and segment image
+    image_path = capture_image_from_webcam()
+    if image_path is None:
+        return
+
+    mask_path = segment_image(image_path)
+
+    # Load the captured and segmented images
+    captured_image = Image.open(image_path).convert('L')
+    segmented_mask = Image.open(mask_path).convert('L')
+
     transform = transforms.Compose(
-        [transforms.Grayscale(num_output_channels=1),  # Convert images to grayscale
-         transforms.Resize((100, 100)),  # Resize to 300x300 pixels
+        [transforms.Grayscale(num_output_channels=1),  # Convert to grayscale
+         transforms.Resize((100, 100)),
          transforms.ToTensor(),
          transforms.Normalize((0.5,), (0.5,))])
-    
+
+    tensor_image = transform(captured_image)
+    tensor_mask = transform(segmented_mask)
+
+    # Use the tensor_image and tensor_mask for training
+
     # Define the path to your training and validation data
     train_data_path = r'C:\Users\RONZELLADOTH\OneDrive - Miba AG\Área de Trabalho\ML_MIBA\ML_Miba\Imagens_para_treino'
     validation_data_path = r'C:\Users\RONZELLADOTH\OneDrive - Miba AG\Área de Trabalho\ML_MIBA\ML_Miba\Validacao_treinamento'
@@ -107,6 +178,10 @@ def treinamento_ML():
         print(f'Validation Accuracy: {accuracy:.2f}%, Avg loss: {test_loss/len(validation_loader):.4f}')
         print("Training completed.")
 
+         # Save the model
+        torch.save(model.state_dict(), r'model.pt')
+        return train_loader, classes, transform
+
         # Save some sample images and their masks
         sample_images, sample_labels = next(iter(validation_loader))
         sample_images, sample_labels = sample_images.to(device), sample_labels.to(device)
@@ -125,10 +200,6 @@ def treinamento_ML():
             ax.axis('off')
         plt.tight_layout()
         plt.show()
-
-    # Save the model
-    torch.save(model.state_dict(), r'model.pt')
-    return train_loader, classes, transform
 
 if __name__ == '__main__':
     train_loader, classes, transform = treinamento_ML()
