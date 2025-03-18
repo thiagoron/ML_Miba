@@ -1,3 +1,4 @@
+# Abertura do Webcam
 import cv2
 import torchvision.transforms as transforms
 from PIL import Image
