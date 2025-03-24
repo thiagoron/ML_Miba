@@ -41,11 +41,26 @@ model = YourModelClass().to(device)
 def calculate_output_size(input_size, kernel_size, stride, padding):
     return (input_size - kernel_size + 2 * padding) // stride + 1
 
+def update_focus(val):
+    global cap
+    cap.set(cv2.CAP_PROP_FOCUS, val)
+
 def capture_image_from_webcam():
+    global cap
     cap = cv2.VideoCapture(1)
+    
     if not cap.isOpened():
         print("Erro: Não foi possível abrir a webcam.")
         return None
+
+    # Ative o autofoco
+    cap.set(cv2.CAP_PROP_AUTOFOCUS, 0)  # 1 para ativar, 0 para desativar
+
+    # Create a window
+    cv2.namedWindow('Imagem Capturada')
+
+    # Create a trackbar for focus distance
+    cv2.createTrackbar('Focus', 'Imagem Capturada', 0, 100, update_focus)
 
     while True:
         ret, frame = cap.read()
@@ -147,7 +162,7 @@ def treinamento_ML():
     # Training loop
     if (input("Do you want to train the model? [y/n]: ") == 'y'):
         print("Starting training...")
-        num_epochs = 10
+        num_epochs = 20
         for epoch in range(num_epochs):
             model.train()
             running_loss = 0.0
@@ -178,10 +193,6 @@ def treinamento_ML():
         print(f'Validation Accuracy: {accuracy:.2f}%, Avg loss: {test_loss/len(validation_loader):.4f}')
         print("Training completed.")
 
-         # Save the model
-        torch.save(model.state_dict(), r'model.pt')
-        return train_loader, classes, transform
-
         # Save some sample images and their masks
         sample_images, sample_labels = next(iter(validation_loader))
         sample_images, sample_labels = sample_images.to(device), sample_labels.to(device)
@@ -201,5 +212,9 @@ def treinamento_ML():
         plt.tight_layout()
         plt.show()
 
+        # Save the model
+        torch.save(model.state_dict(), r'model.pt')
+    return train_loader, classes, transform
+    
 if __name__ == '__main__':
     train_loader, classes, transform = treinamento_ML()

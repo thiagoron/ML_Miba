@@ -1,27 +1,49 @@
-# Abertura do Webcam
 import cv2
+import torch
 import torchvision.transforms as transforms
 from PIL import Image
 import Execute_ML
 import Training_ML  # Import the Training_ML module to get the classes list
 import time
 import matplotlib.pyplot as plt
+import torchvision.models.detection as detection
 
 def update_focus(val):
     global cap
     cap.set(cv2.CAP_PROP_FOCUS, val)
 
+def detect_objects(frame, model, transform):
+    # Convert the frame to a PIL image
+    image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+    tensor_image = transform(image).unsqueeze(0)  # Add batch dimension
+
+    # Perform object detection
+    model.eval()
+    with torch.no_grad():
+        predictions = model(tensor_image)
+
+    return predictions[0]
+
+def draw_bounding_boxes(frame, predictions, threshold=0.5):
+    boxes = predictions['boxes']
+    scores = predictions['scores']
+    for box, score in zip(boxes, scores):
+        if score >= threshold:
+            x1, y1, x2, y2 = box.int().tolist()
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            cv2.putText(frame, f"Score: {score:.2f}", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+
 def inicia_webcam(classes):
     global cap
-    # Inicialize a webcam
+    # Initialize the webcam
     cap = cv2.VideoCapture(1)
 
     if not cap.isOpened():
         print("Erro: Não foi possível abrir a webcam.")
         exit()
 
-    # Ative o autofoco
-    cap.set(cv2.CAP_PROP_AUTOFOCUS, 0)  # 1 para ativar, 0 para desativar
+    # Activate autofocus
+    cap.set(cv2.CAP_PROP_AUTOFOCUS, 0)  # 1 to activate, 0 to deactivate
 
     # Create a window
     cv2.namedWindow('Imagem Capturada')
@@ -29,10 +51,13 @@ def inicia_webcam(classes):
     # Create a trackbar for focus distance
     cv2.createTrackbar('Focus', 'Imagem Capturada', 0, 100, update_focus)
 
-    previous_label = None  # Initialize the previous label
+    # Load a pre-trained object detection model
+    model = detection.fasterrcnn_resnet50_fpn(pretrained=True)
+    transform = transforms.Compose([
+        transforms.ToTensor()
+    ])
 
-    # Define the region of interest (ROI) coordinates
-    roi_x, roi_y, roi_w, roi_h = 200, 200, 300, 300  # Adjust these values as needed
+    previous_label = None  # Initialize the previous label
 
     while True:
         ret, frame = cap.read()
@@ -41,22 +66,16 @@ def inicia_webcam(classes):
             print("Erro: Não foi possível ler o frame.")
             break
 
-        # Draw the ROI rectangle on the frame
-        cv2.rectangle(frame, (roi_x, roi_y), (roi_x + roi_w, roi_y + roi_h), (255, 0, 0), 2)
-
-        # Crop the ROI from the frame
-        roi = frame[roi_y:roi_y + roi_h, roi_x:roi_x + roi_w]
-
-        # Converta a imagem para um tensor e redimensione para 100x100 pixels
-        pil_image = Image.fromarray(cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY))
-        transform = transforms.Compose([
+        # Convert the image to a tensor and resize to 100x100 pixels
+        pil_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
+        transform_ml = transforms.Compose([
             transforms.Resize((100, 100)),
             transforms.ToTensor(),
             transforms.Normalize((0.5,), (0.5,))
         ])
-        tensor_image = transform(pil_image)
+        tensor_image = transform_ml(pil_image)
 
-        # Passe a imagem completa para o modelo de ML
+        # Pass the complete image to the ML model
         predicted_label = Execute_ML.executa_ml(tensor_image, classes)  # Pass the classes list
         
         # Print the predicted class name only if it changes
@@ -64,7 +83,11 @@ def inicia_webcam(classes):
             print(predicted_label)
             previous_label = predicted_label
 
-        # Desenhe as caixas delimitadoras e exiba os resultados
+        # Perform object detection and draw bounding boxes
+        predictions = detect_objects(frame, model, transform)
+        draw_bounding_boxes(frame, predictions)
+
+        # Draw bounding boxes and display the results
         cv2.putText(frame, f"Predicted: {predicted_label}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
         # Use OpenCV to display the image
@@ -73,16 +96,16 @@ def inicia_webcam(classes):
         # Add a delay (e.g., 0.1 seconds)
         time.sleep(0.1)
 
-        # Saia do loop quando a tecla 'q' for pressionada
+        # Exit the loop when the 'q' key is pressed
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-    # Libere a captura e feche as janelas
+    # Release the capture and close the windows
     cap.release()
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':
     # Get the classes list from the training module
     _, classes, _ = Training_ML.treinamento_ML()
-    # Chame a função para iniciar a webcam
+    # Call the function to start the webcam
     inicia_webcam(classes)
