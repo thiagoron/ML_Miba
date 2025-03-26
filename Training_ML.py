@@ -56,10 +56,10 @@ def capture_image_from_webcam():
     # Ative o autofoco
     cap.set(cv2.CAP_PROP_AUTOFOCUS, 0)  # 1 para ativar, 0 para desativar
 
-    # Create a window
+    # Crie uma janela
     cv2.namedWindow('Imagem Capturada')
 
-    # Create a trackbar for focus distance
+    # Crie uma barra de controle para o foco
     cv2.createTrackbar('Focus', 'Imagem Capturada', 0, 100, update_focus)
 
     while True:
@@ -68,8 +68,16 @@ def capture_image_from_webcam():
             print("Erro: Não foi possível ler o frame.")
             break
 
-        cv2.imshow('Press "s" to save the image', frame)
+        # Detecte o círculo e capture as coordenadas do centro
+        center = detect_circle_center(frame)
+        if center:
+            x, y = center
+            cv2.putText(frame, f"Centro: (x: {x}, y: {y})", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
+        # Exiba a imagem com as coordenadas do centro
+        cv2.imshow('Imagem Capturada', frame)
+
+        # Pressione 's' para salvar a imagem
         if cv2.waitKey(1) & 0xFF == ord('s'):
             cv2.imwrite('captured_image.png', frame)
             break
@@ -109,8 +117,34 @@ def segment_image(image_path):
     cv2.destroyAllWindows()
     return 'segmented_mask.png'
 
+def detect_circle_center(image):
+    # Converta a imagem para escala de cinza
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    # Detecte círculos usando a Transformada de Hough
+    circles = cv2.HoughCircles(
+        gray_image,
+        cv2.HOUGH_GRADIENT,
+        dp=1.2,
+        minDist=30,
+        param1=50,
+        param2=30,
+        minRadius=10,
+        maxRadius=50
+    )
+
+    if circles is not None:
+        circles = np.round(circles[0, :]).astype("int")
+        for (x, y, r) in circles:
+            # Desenhe o círculo e o centro na imagem
+            cv2.circle(image, (x, y), r, (0, 255, 0), 2)
+            cv2.circle(image, (x, y), 2, (0, 0, 255), 3)
+            print(f"Círculo detectado no centro: (x: {x}, y: {y})")
+            return (x, y)
+    return None
+
 def treinamento_ML():
-    # Capture and segment image
+    # Capture e segmente a imagem
     image_path = capture_image_from_webcam()
     if image_path is None:
         return
@@ -207,7 +241,7 @@ def treinamento_ML():
             label = classes[sample_labels[i]]
             prediction = classes[sample_predictions[i]]
             ax.imshow(image, cmap='gray')
-            ax.set_title(f"Label: {label}\nPrediction: {prediction}")
+            ax.setTitle(f"Label: {label}\nPrediction: {prediction}")
             ax.axis('off')
         plt.tight_layout()
         plt.show()

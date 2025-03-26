@@ -24,14 +24,6 @@ def detect_objects(frame, model, transform):
 
     return predictions[0]
 
-def draw_bounding_boxes(frame, predictions, threshold=0.5):
-    boxes = predictions['boxes']
-    scores = predictions['scores']
-    for box, score in zip(boxes, scores):
-        if score >= threshold:
-            x1, y1, x2, y2 = box.int().tolist()
-            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            cv2.putText(frame, f"Score: {score:.2f}", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
 def inicia_webcam(classes):
     global cap
@@ -41,9 +33,6 @@ def inicia_webcam(classes):
     if not cap.isOpened():
         print("Erro: Não foi possível abrir a webcam.")
         exit()
-
-    # Activate autofocus
-    cap.set(cv2.CAP_PROP_AUTOFOCUS, 0)  # 1 to activate, 0 to deactivate
 
     # Create a window
     cv2.namedWindow('Imagem Capturada')
@@ -83,9 +72,6 @@ def inicia_webcam(classes):
             print(predicted_label)
             previous_label = predicted_label
 
-        # Perform object detection and draw bounding boxes
-        predictions = detect_objects(frame, model, transform)
-        draw_bounding_boxes(frame, predictions)
 
         # Draw bounding boxes and display the results
         cv2.putText(frame, f"Predicted: {predicted_label}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)

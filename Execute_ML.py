@@ -83,8 +83,3 @@ if __name__ == '__main__':
     print(model)
     outputs = model(images)
     print(outputs)
-    predictions = [{"boxes": boxes, "labels": outputs
-                    } for boxes, outputs in zip(boxes, outputs)]
-    pred = predictions[0]
-    pred_boxes = pred["boxes"].long()
-    outputimage = torchvision.utils.draw_bounding_boxes(images, pred_boxes, width=2)
