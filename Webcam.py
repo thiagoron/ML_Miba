@@ -2,11 +2,10 @@ import cv2
 import torch
 import torchvision.transforms as transforms
 from PIL import Image
-import Execute_ML
 import Training_ML  # Import the Training_ML module to get the classes list
-import time
 import matplotlib.pyplot as plt
 import torchvision.models.detection as detection
+import numpy as np
 
 def update_focus(val):
     global cap
@@ -22,51 +21,6 @@ def detect_objects(frame, model, transform):
         predictions = model(tensor_image)
 
     return predictions[0]
-
-#def draw_bounding_boxes(frame, predictions, threshold=0.5):
-    boxes = predictions['boxes']
-    scores = predictions['scores']
-    labels = predictions['labels']  # Class labels
-
-    for box, score, label in zip(boxes, scores, labels):
-        if score >= threshold:
-            x1, y1, x2, y2 = box.int().tolist()
-            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            cv2.putText(frame, f"Score: {score:.2f}", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-
-def detect_objects_with_model(frame, model, transform):
-    predictions = detect_objects(frame, model, transform)
-    #draw_bounding_boxes(frame, predictions)
-    return frame
-
-def capture_image_from_webcam_with_ml(model, transform):
-    global cap
-    cap = cv2.VideoCapture(1)
-
-    if not cap.isOpened():
-        print("Erro: Não foi possível abrir a webcam.")
-        return None
-
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            print("Erro: Não foi possível ler o frame.")
-            break
-
-        # Detect objects using the trained model
-        frame = detect_objects_with_model(frame, model, transform)
-
-        # Display the frame
-        cv2.imshow('Imagem Capturada', frame)
-
-        # Press 's' to save the image
-        if cv2.waitKey(1) & 0xFF == ord('s'):
-            cv2.imwrite('captured_image.png', frame)
-            break
-
-    cap.release()
-    cv2.destroyAllWindows()
-    return 'captured_image.png'
 
 def inicia_webcam(classes):
     global cap
@@ -96,21 +50,46 @@ def inicia_webcam(classes):
             print("Erro: Não foi possível ler o frame.")
             break
 
-        # Perform object detection
-        predictions = detect_objects(frame, model, transform)
+        # Detecte o círculo e capture as coordenadas do centro
+        center = detect_circle_center(frame)
+        if center:
+            x, y = center
+            cv2.putText(frame, f"Centro: (x: {x}, y: {y})", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
-        # Draw bounding boxes for detected objects
-        #draw_bounding_boxes(frame, predictions)
-
-        # Display the frame
+        # Exiba a imagem com as coordenadas do centro
         cv2.imshow('Imagem Capturada', frame)
-
-        # Exit the loop when the 'q' key is pressed
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
     cap.release()
     cv2.destroyAllWindows()
+
+def detect_circle_center(image):
+    # Converta a imagem para escala de cinza
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    # Detecte círculos usando a Transformada de Hough
+    circles = cv2.HoughCircles(
+        gray_image,
+        cv2.HOUGH_GRADIENT,
+        dp=1.8,
+        minDist=30,
+        param1=50,
+        param2=30,
+        minRadius=10,
+        maxRadius=30
+    )
+
+    if circles is not None:
+        circles = np.round(circles[0, :]).astype("int")
+        for (x, y, r) in circles:
+            # Desenhe o círculo e o centro na imagem
+            cv2.circle(image, (x, y), r, (0, 255, 0), 2)
+            cv2.circle(image, (x, y), 2, (0, 0, 255), 3)
+            print(f"Círculo detectado no centro: (x: {x:}, y: {y:})")
+            return (x, y)
+    return None
+
 
 if __name__ == '__main__':
     # Get the classes list from the training module

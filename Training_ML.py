@@ -4,19 +4,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 import matplotlib.pyplot as plt
-import torchvision
 import torchvision.transforms as transforms
 import cv2
 from PIL import Image
-import time
-
-# Pytorch tensorboard support
-from datetime import datetime
 from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-#print(f"Using {device} device")
 
 class YourModelClass(nn.Module):
     def __init__(self):
@@ -54,40 +48,17 @@ def capture_image_from_webcam():
         print("Erro: Não foi possível abrir a webcam.")
         return None
 
-    # Ative o autofoco
-    cap.set(cv2.CAP_PROP_AUTOFOCUS, 0)  # 1 para ativar, 0 para desativar
-
     # Crie uma janela
     cv2.namedWindow('Imagem Capturada')
 
     # Crie uma barra de controle para o foco
     cv2.createTrackbar('Focus', 'Imagem Capturada', 0, 100, update_focus)
 
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            print("Erro: Não foi possível ler o frame.")
-            break
-
-        # Detecte o círculo e capture as coordenadas do centro
-        center = detect_circle_center(frame)
-        if center:
-            x, y = center
-            cv2.putText(frame, f"Centro: (x: {x}, y: {y})", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-
-        # Exiba a imagem com as coordenadas do centro
-        cv2.imshow('Imagem Capturada', frame)
-
-        # Pressione 's' para salvar a imagem
-        if cv2.waitKey(1) & 0xFF == ord('s'):
-            cv2.imwrite('captured_image.png', frame)
-            break
-
     cap.release()
     cv2.destroyAllWindows()
     return 'captured_image.png'
 
-#def segment_image(image_path):
+def segment_image(image_path):
     image = cv2.imread(image_path)
     mask = np.zeros(image.shape[:2], dtype=np.uint8)
     points = []
@@ -118,31 +89,6 @@ def capture_image_from_webcam():
     cv2.destroyAllWindows()
     return 'segmented_mask.png'
 
-def detect_circle_center(image):
-    # Converta a imagem para escala de cinza
-    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-    # Detecte círculos usando a Transformada de Hough
-    circles = cv2.HoughCircles(
-        gray_image,
-        cv2.HOUGH_GRADIENT,
-        dp=1.8,
-        minDist=30,
-        param1=50,
-        param2=30,
-        minRadius=10,
-        maxRadius=30
-    )
-
-    if circles is not None:
-        circles = np.round(circles[0, :]).astype("int")
-        for (x, y, r) in circles:
-            # Desenhe o círculo e o centro na imagem
-            cv2.circle(image, (x, y), r, (0, 255, 0), 2)
-            cv2.circle(image, (x, y), 2, (0, 0, 255), 3)
-            print(f"Círculo detectado no centro: (x: {x:}, y: {y:})")
-            return (x, y)
-    return None
 
 def treinamento_ML():
     # Capture e segmente a imagem
@@ -150,11 +96,11 @@ def treinamento_ML():
     if image_path is None:
         return
 
-    #mask_path = segment_image(image_path)
+    mask_path = segment_image(image_path)
 
     # Load the captured and segmented images
     captured_image = Image.open(image_path).convert('L')
-    #segmented_mask = Image.open(mask_path).convert('L')
+    segmented_mask = Image.open(mask_path).convert('L')
 
     transform = transforms.Compose(
         [transforms.Grayscale(num_output_channels=1),  # Convert to grayscale
@@ -163,9 +109,7 @@ def treinamento_ML():
          transforms.Normalize((0.5,), (0.5,))])
 
     tensor_image = transform(captured_image)
-    #tensor_mask = transform(segmented_mask)
-
-    # Use the tensor_image and tensor_mask for training
+    tensor_mask = transform(segmented_mask)
 
     # Define the path to your training and validation data
     train_data_path = r'\Imagens_para_treino'
