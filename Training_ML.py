@@ -8,6 +8,7 @@ import torchvision
 import torchvision.transforms as transforms
 import cv2
 from PIL import Image
+import time
 
 # Pytorch tensorboard support
 from datetime import datetime
@@ -86,7 +87,7 @@ def capture_image_from_webcam():
     cv2.destroyAllWindows()
     return 'captured_image.png'
 
-def segment_image(image_path):
+#def segment_image(image_path):
     image = cv2.imread(image_path)
     mask = np.zeros(image.shape[:2], dtype=np.uint8)
     points = []
@@ -125,12 +126,12 @@ def detect_circle_center(image):
     circles = cv2.HoughCircles(
         gray_image,
         cv2.HOUGH_GRADIENT,
-        dp=1.2,
+        dp=1.8,
         minDist=30,
         param1=50,
         param2=30,
         minRadius=10,
-        maxRadius=50
+        maxRadius=30
     )
 
     if circles is not None:
@@ -139,7 +140,7 @@ def detect_circle_center(image):
             # Desenhe o círculo e o centro na imagem
             cv2.circle(image, (x, y), r, (0, 255, 0), 2)
             cv2.circle(image, (x, y), 2, (0, 0, 255), 3)
-            print(f"Círculo detectado no centro: (x: {x}, y: {y})")
+            print(f"Círculo detectado no centro: (x: {x:}, y: {y:})")
             return (x, y)
     return None
 
@@ -149,11 +150,11 @@ def treinamento_ML():
     if image_path is None:
         return
 
-    mask_path = segment_image(image_path)
+    #mask_path = segment_image(image_path)
 
     # Load the captured and segmented images
     captured_image = Image.open(image_path).convert('L')
-    segmented_mask = Image.open(mask_path).convert('L')
+    #segmented_mask = Image.open(mask_path).convert('L')
 
     transform = transforms.Compose(
         [transforms.Grayscale(num_output_channels=1),  # Convert to grayscale
@@ -162,13 +163,13 @@ def treinamento_ML():
          transforms.Normalize((0.5,), (0.5,))])
 
     tensor_image = transform(captured_image)
-    tensor_mask = transform(segmented_mask)
+    #tensor_mask = transform(segmented_mask)
 
     # Use the tensor_image and tensor_mask for training
 
     # Define the path to your training and validation data
-    train_data_path = r'C:\Users\RONZELLADOTH\OneDrive - Miba AG\Área de Trabalho\ML_MIBA\ML_Miba\Imagens_para_treino'
-    validation_data_path = r'C:\Users\RONZELLADOTH\OneDrive - Miba AG\Área de Trabalho\ML_MIBA\ML_Miba\Validacao_treinamento'
+    train_data_path = r'\Imagens_para_treino'
+    validation_data_path = r'\Validacao_treinamento'
 
     # Create datasets using ImageFolder
     train_set = ImageFolder(root=train_data_path, transform=transform)

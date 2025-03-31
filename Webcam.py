@@ -18,12 +18,55 @@ def detect_objects(frame, model, transform):
     tensor_image = transform(image).unsqueeze(0)  # Add batch dimension
 
     # Perform object detection
-    model.eval()
     with torch.no_grad():
         predictions = model(tensor_image)
 
     return predictions[0]
 
+#def draw_bounding_boxes(frame, predictions, threshold=0.5):
+    boxes = predictions['boxes']
+    scores = predictions['scores']
+    labels = predictions['labels']  # Class labels
+
+    for box, score, label in zip(boxes, scores, labels):
+        if score >= threshold:
+            x1, y1, x2, y2 = box.int().tolist()
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            cv2.putText(frame, f"Score: {score:.2f}", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+
+def detect_objects_with_model(frame, model, transform):
+    predictions = detect_objects(frame, model, transform)
+    #draw_bounding_boxes(frame, predictions)
+    return frame
+
+def capture_image_from_webcam_with_ml(model, transform):
+    global cap
+    cap = cv2.VideoCapture(1)
+
+    if not cap.isOpened():
+        print("Erro: Não foi possível abrir a webcam.")
+        return None
+
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            print("Erro: Não foi possível ler o frame.")
+            break
+
+        # Detect objects using the trained model
+        frame = detect_objects_with_model(frame, model, transform)
+
+        # Display the frame
+        cv2.imshow('Imagem Capturada', frame)
+
+        # Press 's' to save the image
+        if cv2.waitKey(1) & 0xFF == ord('s'):
+            cv2.imwrite('captured_image.png', frame)
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
+    return 'captured_image.png'
 
 def inicia_webcam(classes):
     global cap
@@ -42,51 +85,30 @@ def inicia_webcam(classes):
 
     # Load a pre-trained object detection model
     model = detection.fasterrcnn_resnet50_fpn(pretrained=True)
+    model.eval()
     transform = transforms.Compose([
         transforms.ToTensor()
     ])
 
-    previous_label = None  # Initialize the previous label
-
     while True:
         ret, frame = cap.read()
-        
         if not ret:
             print("Erro: Não foi possível ler o frame.")
             break
 
-        # Convert the image to a tensor and resize to 100x100 pixels
-        pil_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
-        transform_ml = transforms.Compose([
-            transforms.Resize((100, 100)),
-            transforms.ToTensor(),
-            transforms.Normalize((0.5,), (0.5,))
-        ])
-        tensor_image = transform_ml(pil_image)
+        # Perform object detection
+        predictions = detect_objects(frame, model, transform)
 
-        # Pass the complete image to the ML model
-        predicted_label = Execute_ML.executa_ml(tensor_image, classes)  # Pass the classes list
-        
-        # Print the predicted class name only if it changes
-        if predicted_label != previous_label:
-            print(predicted_label)
-            previous_label = predicted_label
+        # Draw bounding boxes for detected objects
+        draw_bounding_boxes(frame, predictions)
 
-
-        # Draw bounding boxes and display the results
-        cv2.putText(frame, f"Predicted: {predicted_label}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-
-        # Use OpenCV to display the image
+        # Display the frame
         cv2.imshow('Imagem Capturada', frame)
-
-        # Add a delay (e.g., 0.1 seconds)
-        time.sleep(0.1)
 
         # Exit the loop when the 'q' key is pressed
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-    # Release the capture and close the windows
     cap.release()
     cv2.destroyAllWindows()
 
