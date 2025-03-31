@@ -16,7 +16,7 @@ from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"Using {device} device")
+#print(f"Using {device} device")
 
 class YourModelClass(nn.Module):
     def __init__(self):

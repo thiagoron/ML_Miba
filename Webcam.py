@@ -100,7 +100,7 @@ def inicia_webcam(classes):
         predictions = detect_objects(frame, model, transform)
 
         # Draw bounding boxes for detected objects
-        draw_bounding_boxes(frame, predictions)
+        #draw_bounding_boxes(frame, predictions)
 
         # Display the frame
         cv2.imshow('Imagem Capturada', frame)

@@ -24,7 +24,7 @@ class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Sistema de reconhecimendo de centro SRC")
-        self.setGeometry(100, 100, 800, 600)
+        self.setGeometry(100, 100, 400, 300)
         self.layout = QVBoxLayout()
 
         self.label = QLabel("start the process")
