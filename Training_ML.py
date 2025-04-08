@@ -112,8 +112,8 @@ def treinamento_ML():
     tensor_mask = transform(segmented_mask)
 
     # Define the path to your training and validation data
-    train_data_path = r'\Imagens_para_treino'
-    validation_data_path = r'\Validacao_treinamento'
+    train_data_path = r'Imagens_para_treino'
+    validation_data_path = r'Validacao_treinamento'
 
     # Create datasets using ImageFolder
     train_set = ImageFolder(root=train_data_path, transform=transform)
@@ -186,7 +186,7 @@ def treinamento_ML():
             label = classes[sample_labels[i]]
             prediction = classes[sample_predictions[i]]
             ax.imshow(image, cmap='gray')
-            ax.setTitle(f"Label: {label}\nPrediction: {prediction}")
+            ax.set_title(f"Label: {label}\nPrediction: {prediction}")  # Corrigido aqui
             ax.axis('off')
         plt.tight_layout()
         plt.show()
